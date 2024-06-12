@@ -1,10 +1,62 @@
 import FullPageLoader from '../components/FullPageLoader.jsx';
 import {useState} from 'react';
+import { auth } from '../firebase/config.js';
+import { createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/auth";
+import { useDispatch } from 'react-redux/es/exports.js';
+import { setUser } from '../store/usersSlice.js';
 
 
 function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
+  const [isLoading, setIsLoading] = useState(true);
   const [loginType, setLoginType] = useState('login');
+  const [userCredentials, setUserCredentials] = useState({});
+  const [error, setError] = useState('');
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      dispatch(setUser({ id: user.uid, email: user.email }));
+    } else {
+      dispatch(setUser(null));
+    }
+
+    if (isLoading) { setIsLoading(false) }
+  });
+
+  function handleCredentials(e) {
+    setUserCredentials({...userCredentials, [e.target.name]: e.target.value})
+  }
+
+  function handleSignup(e) {
+    e.preventDefault();
+    setError("");
+    
+    const { email, password } = userCredentials;
+    createUserWithEmailAndPassword(auth, email, password)
+      .catch((error) => {;
+        setError(error.message);
+      });
+  }
+
+  function handleLogin(e) {
+    e.preventDefault();
+    setError("");
+    
+    const { email, password } = userCredentials;
+    signInWithEmailAndPassword(auth, email, password)
+      .catch((error) => {
+        setError(error.message);
+      });
+  }
+
+  function handlePasswordReset() {
+    const email = prompt('Please enter your e-mail');
+
+    if (email) {
+      sendPasswordResetEmail(auth, email);
+      alert('E-mail sent! Check your inbox for password reset instructions.');
+    }
+  }
 
   
     return (
@@ -30,20 +82,26 @@ function LoginPage() {
             <form className="add-form login">
                   <div className="form-control">
                       <label>Email *</label>
-                      <input type="text" name="email" placeholder="Enter your email" />
+                      <input onChange={(e) => handleCredentials(e)} type="text" name="email" placeholder="Enter your email" />
                   </div>
                   <div className="form-control">
                       <label>Password *</label>
-                      <input type="password" name="password" placeholder="Enter your password" />
+                      <input onChange={(e) => handleCredentials(e)} type="password" name="password" placeholder="Enter your password" />
                   </div>
                   {
                     loginType == 'login' ?
-                    <button className="active btn btn-block">Login</button>
+                    <button onClick={(e) => handleLogin(e)} className="active btn btn-block">Login</button>
                     : 
-                    <button className="active btn btn-block">Sign Up</button>
+                    <button onClick={(e) => handleSignup(e)} className="active btn btn-block">Sign Up</button>
                   }
 
-                  <p className="forgot-password">Forgot Password?</p>
+                  { error &&
+                    <div className="error">
+                      {error}
+                    </div>
+                  }
+
+                  <p onClick={handlePasswordReset} className="forgot-password">Forgot Password?</p>
                   
               </form>
           </section>
