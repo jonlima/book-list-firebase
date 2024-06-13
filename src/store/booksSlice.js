@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { auth, db } from '../firebase/config';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 
 export const booksSlice = createSlice({
   name: 'books',
@@ -17,13 +17,13 @@ export const booksSlice = createSlice({
     eraseBook: (books, action) => {
         return books.filter(book => book.id != action.payload);
     },
-    toggleRead: (books, action) => {
-        books.map(book => {
-          if (book.id == action.payload) {
-            book.isRead = !book.isRead;
-          }
-        });
-    }
+    // toggleRead: (books, action) => {
+    //     books.map(book => {
+    //       if (book.id == action.payload) {
+    //         book.isRead = !book.isRead;
+    //       }
+    //     });
+    // }
   },
   extraReducers(builder) {
     builder
@@ -38,10 +38,21 @@ export const booksSlice = createSlice({
         state.status = 'failed'
         console.log(action.error.message)
       })
+      .addCase(toggleRead.fulfilled, (state, action) => {
+        state.books.map(book => {
+          if (book.id == action.payload) {
+            book.isRead = !book.isRead;
+          }
+        })
+      })
+      .addCase(toggleRead.rejected, (state, action) => {
+        state.status = 'failed'
+        console.log(action.error.message)
+      })
   }
 })
 
-export const { addBook, eraseBook, toggleRead } = booksSlice.actions;
+export const { addBook, eraseBook } = booksSlice.actions;
 
 export const selectBooks = state => state.books;
 
@@ -57,4 +68,13 @@ export const fetchBooks = createAsyncThunk('books/fetchBooks', async () => {
   });
 
   return bookList;
+});
+
+export const toggleRead = createAsyncThunk('book/toggleRead', async (payload) => {
+  const bookRef = doc(db, "books", payload.id);
+  await updateDoc(bookRef, {
+    isRead: !payload.isRead
+  })
+
+  return payload.id;
 });
