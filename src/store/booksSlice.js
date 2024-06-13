@@ -39,14 +39,22 @@ export const booksSlice = createSlice({
         state.status = 'failed'
         console.log(action.error.message)
       })
+      .addCase(eraseBook.pending, (state, action) => {
+        state.status = 'loading'
+      })
       .addCase(eraseBook.fulfilled, (state, action) => {
+        state.status = 'succeeded'
         state.books = state.books.filter(book => book.id != action.payload);
       })
       .addCase(eraseBook.rejected, (state, action) => {
         state.status = 'failed'
         console.log(action.error.message)
       })
+      .addCase(addBook.pending, (state, action) => {
+        state.status = 'loading'
+      })
       .addCase(addBook.fulfilled, (state, action) => {
+        state.status = 'succeeded'
         state.books.push(action.payload);
       })
       .addCase(addBook.rejected, (state, action) => {

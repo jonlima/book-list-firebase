@@ -22,6 +22,8 @@ function BooksPage() {
         <div className="container">
             <Header pageTitle={pageTitle} />
             <div className="books-container">
+              { bookStatus == 'loading' ?
+                'Loading...' :
                 <div className="books-list">
                     
                     {books.map(book => 
@@ -31,6 +33,7 @@ function BooksPage() {
                     )}
 
                 </div>
+              }
             </div>
         </div>
       </>
