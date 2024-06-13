@@ -1,8 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Notes from '../components/Notes.jsx';
-import {useSelector, useDispatch} from 'react-redux';
-import {selectBooks, eraseBook, toggleRead, fetchBooks} from '../store/booksSlice.js';
-import {eraseBookNotes} from '../store/notesSlice.js';
+import {useDispatch} from 'react-redux';
+import { eraseBook, toggleRead } from '../store/booksSlice.js';
 import { useEffect, useState } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
@@ -18,7 +17,6 @@ function SingleBookPage() {
   function handleEraseBook(id) {
     if(confirm('Are you sure you want to erase this book and all notes associated with it?')){
       dispatch(eraseBook(id));
-      // dispatch(eraseBookNotes(id));
       navigate("/");
     }
   }

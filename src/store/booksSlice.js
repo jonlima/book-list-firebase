@@ -100,6 +100,6 @@ export const addBook = createAsyncThunk('book/addBook', async (payload) => {
 
   const bookRef = await addDoc(collection(db, "books"), newBook)
   newBook.id = bookRef.id;
-  console.log("newBook ID: ", bookRef.id);
+  
   return newBook;
 });
