@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { auth, db } from '../firebase/config';
-import { collection, deleteDoc, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 
 export const booksSlice = createSlice({
   name: 'books',
@@ -9,20 +9,10 @@ export const booksSlice = createSlice({
     status: 'idle'
   },
   reducers: {
-    addBook: (books, action) => {
-      let newBook = action.payload;
-      newBook.id = books.length ? Math.max(...books.map(book => book.id)) + 1 : 1;
-      books.push(newBook);
-    },
-    // eraseBook: (books, action) => {
-    //     return books.filter(book => book.id != action.payload);
-    // },
-    // toggleRead: (books, action) => {
-    //     books.map(book => {
-    //       if (book.id == action.payload) {
-    //         book.isRead = !book.isRead;
-    //       }
-    //     });
+    // addBook: (books, action) => {
+    //   let newBook = action.payload;
+    //   newBook.id = books.length ? Math.max(...books.map(book => book.id)) + 1 : 1;
+    //   books.push(newBook);
     // }
   },
   extraReducers(builder) {
@@ -56,10 +46,15 @@ export const booksSlice = createSlice({
         state.status = 'failed'
         console.log(action.error.message)
       })
+      .addCase(addBook.fulfilled, (state, action) => {
+        state.books.push(action.payload);
+      })
+      .addCase(addBook.rejected, (state, action) => {
+        state.status = 'failed'
+        console.log(action.error.message)
+      })
   }
 })
-
-export const { addBook } = booksSlice.actions;
 
 export const selectBooks = state => state.books;
 
@@ -89,4 +84,14 @@ export const toggleRead = createAsyncThunk('book/toggleRead', async (payload) =>
 export const eraseBook = createAsyncThunk('book/eraseBook', async (payload) => {
   await deleteDoc(doc(db, "books", payload));
   return payload;
+});
+
+export const addBook = createAsyncThunk('book/addBook', async (payload) => {
+  let newBook = payload;
+  newBook.user_id = auth.currentUser.uid;
+
+  const bookRef = await addDoc(collection(db, "books"), newBook)
+  newBook.id = bookRef.id;
+  console.log("newBook ID: ", bookRef.id);
+  return newBook;
 });
